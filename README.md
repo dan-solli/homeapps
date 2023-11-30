@@ -1,2 +1,2 @@
 # homeapps
-All my home apps.
+Framework playground
