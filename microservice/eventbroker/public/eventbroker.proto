@@ -1,0 +1,48 @@
+syntax="proto3";
+
+package main
+
+option go_package = "./eventbroker_public";
+
+service EventBrokerService {
+  rpc PostEvent (PostEventRequest) returns (PostEventResponse) {}
+  rpc Subscribe (SubscribeRequest) returns (SubscribeResponse) {}
+  rpc Unsubscribe (UnsubscribeRequest) returns (UnsubscribeResponse) {}
+  rpc PushEvent (PushEventsRequest) returns (PushEventsResponse) {}
+  rpc PullEvents (PullEventsRequest) returns (stream PullEventsResponse) {}
+}
+
+message PostEventRequest {
+}
+
+message PostEventResponse {
+}
+
+message SubscribeRequest {
+}
+
+message SubscribeResponse {
+}
+
+message UnsubscribeRequest {
+}
+
+message UnsubscribeResponse {
+}
+
+message PushEventsRequest {
+  sent_by string = 1;
+  event string = 2;
+  payload message = 3;
+  sent_at google.protobuf.Timestamp = 4;
+}
+
+message PullEventsRequest {
+}
+
+message PullEventsResponse {
+}
+
+
+// Where do we have queues? In the broker or in the client? Both?
+

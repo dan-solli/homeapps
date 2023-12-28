@@ -1,0 +1,21 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
+
+go_library(
+    name = "servicemesh_lib",
+    srcs = ["server.go"],
+    importpath = "github.com/dan-solli/homeapps/microservice/servicemesh",
+    visibility = ["//visibility:private"],
+    deps = [
+        "@com_github_google_uuid//:go_default_library",
+        "@com_github_lib_pq//:go_default_library",
+        "@com_github_spf13_viper//:go_default_library",
+        "@org_golang_google_grpc//:go_default_library",
+        "@org_golang_google_grpc//credentials:go_default_library",
+    ],
+)
+
+go_binary(
+    name = "servicemesh",
+    embed = [":servicemesh_lib"],
+    visibility = ["//visibility:public"],
+)

@@ -1,0 +1,53 @@
+syntax="proto3";
+
+package main;
+
+option go_package = "./servicemesh_public";
+
+
+service ServiceMeshService {
+    rpc Announce (AnnounceRequest) returns (AnnounceResponse) {}
+    rpc Register (RegisterRequest) returns (RegisterResponse) {}
+    rpc Denounce (DenounceRequest) returns (DenounceResponse) {}
+    rpc Deregister (DeregisterRequest) returns (DeregisterResponse) {}
+}
+
+message AnnounceRequest {
+    string name = 1;
+    string version = 2;
+}
+
+message AnnounceResponse {
+    string id = 1;
+    int32 serviceport = 2;
+}
+
+message RegisterRequest {
+    string id = 1;
+    string name = 2;
+    string purpose = 3; // healthcheck, metrics, gprc, rest
+    string path = 4;
+}
+
+message RegisterResponse {
+    string id = 1;
+    string service_id = 2;
+    int32 port = 3;
+}
+
+message DenounceRequest {
+    string id = 1;
+}
+
+message DenounceResponse {
+    bool status = 1;
+}
+
+message DeregisterRequest {
+    string id = 1;
+    string service_id = 2;
+}
+
+message DeregisterResponse {
+    bool status = 1;
+}

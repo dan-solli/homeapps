@@ -1,2 +1,6 @@
 homeapps.code-workspace
 applications/todo/
+*.pb.go
+microservice/servicemesh/.env
+microservice/servicemesh/x509/server_cert.pem
+microservice/servicemesh/x509/server_key.pem

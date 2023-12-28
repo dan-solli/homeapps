@@ -1,0 +1,1 @@
+CREATE DATABASE refarch WITH OWNER = "postgres" ENCODING = "UTF8";

@@ -1,0 +1,16 @@
+syntax: "proto3";
+
+package checklist;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/dan-solli/homeapps/protos/checklist";
+
+message Checklist {
+  string id = 1;
+  string name = 2;
+  repeated ChecklistItem items = 3;
+  google.protobuf.Timestamp created = 4;
+  google.protobuf.Timestamp updated = 5;
+}
+
