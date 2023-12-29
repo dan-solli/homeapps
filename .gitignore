@@ -4,3 +4,7 @@ applications/todo/
 microservice/servicemesh/.env
 microservice/servicemesh/x509/server_cert.pem
 microservice/servicemesh/x509/server_key.pem
+bazel-bin
+bazel-homeapps
+bazel-out
+bazel-testlogs

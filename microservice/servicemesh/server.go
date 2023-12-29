@@ -9,7 +9,7 @@ import (
 	"database/sql"
 	"log/slog"
 
-	pb "github.com/dan-solli/homeapps/microservice/servicemesh/public"
+	pb "github.com/dan-solli/homeapps/common/proto/servicemesh"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"

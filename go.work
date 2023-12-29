@@ -4,6 +4,9 @@ use ./common/testutil
 
 use ./common/common
 
+use ./common/proto/eventbroker
+use ./common/proto/servicemesh
+
 use ./microservice/checklist
 use ./microservice/servicemesh
 use ./microservice/eventbroker
