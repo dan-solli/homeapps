@@ -1,15 +1,24 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"net"
 	"os"
+	"time"
 
 	"database/sql"
 	"log/slog"
 
+	eb "github.com/dan-solli/homeapps/common/proto/eventbroker"
 	pb "github.com/dan-solli/homeapps/common/proto/servicemesh"
+
+	"github.com/golang/protobuf/jsonpb"
+	structpb "github.com/golang/protobuf/ptypes/struct"
+
+	"google.golang.org/protobuf/types/known/timestamppb"
+	//"google.golang.org/protobuf/types/known/struct"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -46,6 +55,7 @@ var (
 	rtc runtimeConfig
 	svc []serviceCache
 	log *slog.Logger
+	ebc eb.EventBrokerServiceClient
 )
 
 func init() {
@@ -77,6 +87,14 @@ func init() {
 }
 
 func main() {
+	var g_opts []grpc.DialOption
+	conn, err := grpc.Dial(viper.GetString("EVENTBROKER_ADDRESS"), g_opts...)
+	if err != nil {
+		log.Error("Can't connect to EventBroker", "err", err)
+	}
+	defer conn.Close()
+	ebc = eb.NewEventBrokerServiceClient(conn)
+
 	lis, err := init_server(6000)
 	if err != nil {
 		log.Error("failed to start server", "err", err)
@@ -90,6 +108,16 @@ func main() {
 	if err := s.Serve(lis); err != nil {
 		log.Error("failed to serve", "err", err)
 	}
+}
+
+func json2pb(json string) (*eb.EventPayload, error) {
+	msg := &eb.EventPayload{Data: &structpb.Value{}}
+	jsm := jsonpb.Unmarshaler{}
+
+	if err := jsm.Unmarshal(bytes.NewReader([]byte(json)), msg.Data); err != nil {
+		return nil, err
+	}
+	return msg, nil
 }
 
 func init_flags(rtc *runtimeConfig) {
@@ -184,9 +212,32 @@ func (s *server) Announce(ctx context.Context, in *pb.AnnounceRequest) (*pb.Anno
 
 	svc = append(svc, sc)
 
-	/*
-		TODO: Post Event about the newcomer.
-	*/
+	json := "[1, 2, 3]"
+	pbjson, err := json2pb(json)
+	if err != nil {
+		log.Error("Could not convert string json to object", "err", err, "json", json)
+	}
+
+	r, err := ebc.PostEvent(context.Background(), &eb.PostEventRequest{
+		EventId:       uuid.New().String(),
+		CorrelationId: uuid.New().String(),
+		Source:        "Microservice:ServiceMesh",
+		Event:         "framework.service.announce",
+		CreatedAt:     timestamppb.New(time.Now()),
+		Payload: &eb.EventPayload{
+			ContentType: "text/json",
+			Data:        pbjson.Data,
+		},
+	})
+	if err != nil {
+		log.Error("Call to PostEvent failed.", "request", "<bleh>", "err", err)
+	}
+	log.Debug("PostEvent response:",
+		"event_id", r.EventId,
+		"corr_id", r.CorrelationId,
+		"timestamp", r.CreatedAt.AsTime(),
+	)
+
 	return &pb.AnnounceResponse{
 		Id:          sc.ext_id.String(),
 		Serviceport: sc.port,

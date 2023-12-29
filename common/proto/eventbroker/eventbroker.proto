@@ -20,7 +20,7 @@ message EventHeader {
 
 message EventPayload {
   string content_type = 1;
-  google.protobuf.Struct data = 2;
+  google.protobuf.Value data = 2;
 }
 
 message PostEventRequest {
