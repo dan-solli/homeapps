@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-func init_db(rtc *RuntimeConfig) error {
+func init_db(rtc *runtimeConfig) error {
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		viper.GetString("DB_HOST"), viper.GetInt("DB_PORT"), viper.GetString("DB_USER"), viper.GetString("DB_PASS"), viper.GetString("DB_NAME"))
 	db, err := sql.Open("postgres", psqlInfo)
@@ -29,7 +29,7 @@ func readState(d *sql.DB) (int, error) {
 	}
 	defer rows.Close()
 
-	var sv ServiceCache
+	var sv serviceCache
 	counter := 0
 
 	for rows.Next() {
@@ -42,7 +42,7 @@ func readState(d *sql.DB) (int, error) {
 	return counter, nil
 }
 
-func getFreePort(c context.Context, r RuntimeConfig) (int32, error) {
+func getFreePort(c context.Context, r runtimeConfig) (int32, error) {
 	rows := r.db.QueryRowContext(c, "SELECT COALESCE(MAX(port), ?) FROM service WHERE active = true",
 		viper.GetInt("SERVICE_PORT_RANGE_START"))
 
@@ -56,7 +56,7 @@ func getFreePort(c context.Context, r RuntimeConfig) (int32, error) {
 	return int32(tmpport + 1), nil
 }
 
-func storeService(c context.Context, r RuntimeConfig, s ServiceCache) error {
+func storeService(c context.Context, r runtimeConfig, s serviceCache) error {
 	_, err := rtc.db.ExecContext(
 		c,
 		"INSERT INTO service (ext_id, name, version, port, active) VALUES (?, ?, ?, ?, ?)",

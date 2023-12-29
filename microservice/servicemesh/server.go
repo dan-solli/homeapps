@@ -5,18 +5,15 @@ import (
 	"net"
 	"os"
 
-	"database/sql"
 	"log/slog"
 
-	//"google.golang.org/protobuf/types/known/struct"
-
-	"github.com/google/uuid"
 	_ "github.com/lib/pq"
 	"github.com/spf13/viper"
 )
 
 // TODO: Need function to check health on registered services (and match with db)
 
+/*
 type RuntimeConfig struct {
 	db       *sql.DB
 	tls      bool
@@ -24,7 +21,8 @@ type RuntimeConfig struct {
 	keyFile  string
 	port     int
 }
-
+*/
+/*
 type ServiceCache struct {
 	ext_id  uuid.UUID
 	name    string
@@ -32,23 +30,20 @@ type ServiceCache struct {
 	port    int32
 	active  bool
 }
+*/
 
 var (
-	rtc RuntimeConfig
-	svc []ServiceCache
+	//rtc RuntimeConfig
+	//svc []serviceCache
 	log *slog.Logger
 )
-
-func getConfig() RuntimeConfig {
-	return rtc
-}
 
 func init() {
 	viper.SetEnvPrefix("MS_SM")
 	viper.AutomaticEnv()
 
-	rtc = RuntimeConfig{}
-	svc = []ServiceCache{}
+	init_config()
+	init_cache()
 
 	log = slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
@@ -74,7 +69,7 @@ func init() {
 func main() {
 }
 
-func init_flags(rtc *RuntimeConfig) {
+func init_flags(rtc *runtimeConfig) {
 	rtc.tls = viper.GetBool("TLS")
 	rtc.certFile = viper.GetString("CERTFILE")
 	rtc.keyFile = viper.GetString("KEYFILE")
