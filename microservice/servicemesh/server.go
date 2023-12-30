@@ -12,29 +12,10 @@ import (
 )
 
 // TODO: Need function to check health on registered services (and match with db)
-
-/*
-type RuntimeConfig struct {
-	db       *sql.DB
-	tls      bool
-	certFile string
-	keyFile  string
-	port     int
-}
-*/
-/*
-type ServiceCache struct {
-	ext_id  uuid.UUID
-	name    string
-	version string
-	port    int32
-	active  bool
-}
-*/
+// TODO: How and when should environment variables be read?
+// TODO: Implement retries and waiting for remote services not responding.
 
 var (
-	//rtc RuntimeConfig
-	//svc []serviceCache
 	log *slog.Logger
 )
 
@@ -42,12 +23,20 @@ func init() {
 	viper.SetEnvPrefix("MS_SM")
 	viper.AutomaticEnv()
 
-	init_config()
-	init_cache()
-
 	log = slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
-	init_flags(&rtc)
+	rtc.tls = viper.GetBool("TLS")
+	rtc.certFile = viper.GetString("CERTFILE")
+	rtc.keyFile = viper.GetString("KEYFILE")
+	rtc.port = viper.GetInt("GRPC_PORT")
+
+	// TODO: Is there a reason these two functions has a different return signature?
+	if _, err := init_grpc_client(); err != nil {
+		log.Error("Failed to initialize grpc-client", "err", err)
+	}
+	if err := init_grpc_server(&rtc); err != nil {
+		log.Error("Failed to initialize grpc-server", "err", err)
+	}
 
 	// Init database
 	err := init_db(&rtc)
@@ -70,10 +59,7 @@ func main() {
 }
 
 func init_flags(rtc *runtimeConfig) {
-	rtc.tls = viper.GetBool("TLS")
-	rtc.certFile = viper.GetString("CERTFILE")
-	rtc.keyFile = viper.GetString("KEYFILE")
-	rtc.port = viper.GetInt("GRPC_PORT")
+
 }
 
 func init_server(port int) (net.Listener, error) {

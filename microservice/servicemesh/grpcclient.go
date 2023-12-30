@@ -17,13 +17,15 @@ var (
 	ebc eb.EventBrokerServiceClient
 )
 
-func init_grpc_clients() (bool, error) {
-	var g_opts []grpc.DialOption
-	conn, err := grpc.Dial(viper.GetString("EVENTBROKER_ADDRESS"), g_opts...)
+func init_grpc_client() (bool, error) {
+	opts := []grpc.DialOption{}
+
+	conn, err := grpc.Dial(viper.GetString("EVENTBROKER_ADDRESS"), opts...)
 	if err != nil {
 		log.Error("Can't connect to EventBroker", "err", err)
 		return false, err
 	}
+
 	defer conn.Close()
 	ebc = eb.NewEventBrokerServiceClient(conn)
 	return true, nil

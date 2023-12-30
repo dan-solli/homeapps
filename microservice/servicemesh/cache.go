@@ -14,6 +14,17 @@ type serviceCache struct {
 	active  bool
 }
 
-func init_cache() {
-	svc = []serviceCache{}
+/*
+type meshCache struct {
+	services []serviceCache
 }
+
+func (m meshCache) findServiceByName(name string) (*serviceCache, error) {
+	for _, s := range m.services {
+		if s.name == name {
+			return &s, nil
+		}
+	}
+	return nil, fmt.Errorf("Service %q not found", name)
+}
+*/

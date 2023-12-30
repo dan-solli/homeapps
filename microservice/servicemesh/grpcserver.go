@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
@@ -15,9 +16,9 @@ type server struct {
 }
 
 func init_grpc_server(r *runtimeConfig) error {
-	var opts = []grpc.ServerOption{}
+	var opts []grpc.ServerOption
 
-	lis, err := init_server(6000)
+	lis, err := init_server(viper.GetInt("GRPC_PORT"))
 	if err != nil {
 		log.Error("failed to start server", "err", err)
 	}
@@ -29,8 +30,6 @@ func init_grpc_server(r *runtimeConfig) error {
 			return err
 		}
 		opts = []grpc.ServerOption{grpc.Creds(creds)}
-	} else {
-		opts = []grpc.ServerOption{}
 	}
 
 	s := grpc.NewServer(opts...)
@@ -51,13 +50,13 @@ func (s *server) Announce(ctx context.Context, in *pb.AnnounceRequest) (*pb.Anno
 		active:  true,
 	}
 
-	tmpport, err := getFreePort(ctx, rtc)
+	tmpport, err := getFreePort(ctx, rtc.db)
 	if err != nil {
 		log.Error("No free port number to hand out.", "err", err)
 	}
 	sc.port = tmpport
 
-	if err := storeService(ctx, rtc, sc); err != nil {
+	if err := storeService(ctx, rtc.db, sc); err != nil {
 		log.Error("Failed to save service to db", "service", sc.name, "port", sc.port, "err", err)
 	}
 

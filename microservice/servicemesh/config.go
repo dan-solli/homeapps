@@ -13,7 +13,3 @@ type runtimeConfig struct {
 var (
 	rtc runtimeConfig
 )
-
-func init_config() {
-	rtc = runtimeConfig{}
-}
