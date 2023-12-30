@@ -1,15 +1,27 @@
 package main
 
-import "database/sql"
+import (
+	"github.com/spf13/viper"
+)
 
-type runtimeConfig struct {
-	db       *sql.DB
+type ServiceMeshConfig struct {
 	tls      bool
 	certFile string
 	keyFile  string
-	port     int
+	grpcport int
+	httpport int
 }
 
-var (
-	rtc runtimeConfig
-)
+// TODO: Need to fake the config. But that might be easy by not calling this func. Except if it contains more stuff.
+func NewServiceMeshConfig() (ServiceMeshConfig, error) {
+	viper.SetEnvPrefix("MS_SM")
+	viper.AutomaticEnv()
+
+	return ServiceMeshConfig{
+		tls:      viper.GetBool("TLS"),
+		certFile: viper.GetString("CERTFILE"),
+		keyFile:  viper.GetString("KEYFILE"),
+		grpcport: viper.GetInt("GRPC_PORT"),
+		httpport: viper.GetInt("HTTP_PORT"),
+	}, nil
+}

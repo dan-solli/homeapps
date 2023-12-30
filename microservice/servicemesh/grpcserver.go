@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
@@ -15,16 +14,16 @@ type server struct {
 	pb.UnimplementedServiceMeshServiceServer
 }
 
-func init_grpc_server(r *runtimeConfig) error {
+func init_grpc_server(c ServiceMeshConfig) error {
 	var opts []grpc.ServerOption
 
-	lis, err := init_server(viper.GetInt("GRPC_PORT"))
+	lis, err := init_server(c.grpcport)
 	if err != nil {
 		log.Error("failed to start server", "err", err)
 	}
 
-	if r.tls {
-		creds, err := credentials.NewServerTLSFromFile(r.certFile, r.keyFile)
+	if c.tls {
+		creds, err := credentials.NewServerTLSFromFile(c.certFile, c.keyFile)
 		if err != nil {
 			log.Error("Failed to generate credentials", "err", err)
 			return err

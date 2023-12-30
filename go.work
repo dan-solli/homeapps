@@ -7,6 +7,8 @@ use ./common/common
 use ./common/proto/eventbroker
 use ./common/proto/servicemesh
 
+use ./common/clients/eventbroker/eventbroker.go
+
 use ./microservice/checklist
 use ./microservice/servicemesh
 use ./microservice/eventbroker

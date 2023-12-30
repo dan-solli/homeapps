@@ -13,6 +13,12 @@ type Repo struct {
 	Db *sql.DB
 }
 
+type Repository interface {
+	ReadServices(c context.Context) (int32, error)
+	GetFreePortNumber(c context.Context) (int32, error)
+	StoreService(c context.Context) error
+}
+
 func RepoInterface(db *sql.DB) *Repo {
 	return &Repo{Db: db}
 }
