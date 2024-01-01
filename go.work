@@ -4,10 +4,10 @@ use ./common/testutil
 
 use ./common/common
 
-use ./common/proto/eventbroker
-use ./common/proto/servicemesh
+use ./proto/eventbroker
+use ./proto/servicemesh
 
-use ./common/clients/eventbroker/eventbroker.go
+use ./common/clients/eventbroker
 
 use ./microservice/checklist
 use ./microservice/servicemesh

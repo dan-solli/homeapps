@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	eb "github.com/dan-solli/homeapps/common/proto/eventbroker"
+	eb "github.com/dan-solli/homeapps/proto/eventbroker"
 	spb "github.com/golang/protobuf/ptypes/struct"
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
@@ -36,7 +36,7 @@ func NewEventBrokerClient(adr string) (*EventBrokerClient, error) {
 	}, nil
 }
 
-func (ebc EventBrokerClient) announceEvent(c context.Context, j string) (*eb.PostEventResponse, error) {
+func (ebc EventBrokerClient) AnnounceEvent(c context.Context, j string) (*eb.PostEventResponse, error) {
 	field, err := json2pb(j)
 	if err != nil {
 		log.Error("Could not convert string json to object", "err", err, "json", j)

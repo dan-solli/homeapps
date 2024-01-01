@@ -1,4 +1,4 @@
-module github.com/dan-solli/homeapps/common/proto/servicemesh
+module github.com/dan-solli/homeapps/proto/servicemesh
 
 go 1.21.5
 
