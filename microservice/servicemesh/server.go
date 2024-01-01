@@ -2,11 +2,9 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"net"
 	"os"
-	"sync"
 
 	"log/slog"
 
@@ -18,6 +16,7 @@ import (
 	"google.golang.org/grpc/credentials"
 
 	eb "github.com/dan-solli/homeapps/common/clients/eventbroker"
+	pg "github.com/dan-solli/homeapps/microservice/servicemesh/database/pgsql"
 	pb "github.com/dan-solli/homeapps/proto/servicemesh"
 )
 
@@ -29,14 +28,9 @@ var (
 	log *slog.Logger
 )
 
-type PgSQLRepository struct {
-	lock *sync.RWMutex
-	db   *sql.DB
-}
-
 type iStore interface {
-	getFreePortNumber(c context.Context) (int32, error)
-	storeService(c context.Context, s service) error
+	GetFreePortNumber(c context.Context) (int32, error)
+	StoreService(c context.Context, s pg.Service) error
 }
 
 type ServiceMesh struct {
@@ -47,14 +41,6 @@ type ServiceMesh struct {
 
 type server struct {
 	pb.UnimplementedServiceMeshServiceServer
-}
-
-type service struct {
-	ext_id  uuid.UUID
-	name    string
-	version string
-	port    int32
-	active  bool
 }
 
 var (
@@ -81,7 +67,7 @@ func main() {
 	}
 	app.gc = ebc
 
-	if store, err := NewPgSQLRepository(app.cfg); err != nil {
+	if store, err := pg.NewPgSQLRepository(log); err != nil {
 		log.Error("Failed to initialize repository", "err", err)
 	} else {
 		app.store = store
@@ -127,66 +113,22 @@ func NewServerListener(port int) (net.Listener, error) {
 	return lis, nil
 }
 
-func NewPgSQLRepository(c ServiceMeshConfig) (*PgSQLRepository, error) {
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		viper.GetString("DB_HOST"),
-		viper.GetInt("DB_PORT"),
-		viper.GetString("DB_USER"),
-		viper.GetString("DB_PASS"),
-		viper.GetString("DB_NAME"))
-	db, err := sql.Open("postgres", psqlInfo)
-	if err != nil {
-		log.Error("Fatal error getting database connection", "err", err)
-		return nil, err
-	}
-
-	return &PgSQLRepository{
-		lock: &sync.RWMutex{},
-		db:   db,
-	}, nil
-}
-
-func (m PgSQLRepository) getFreePortNumber(c context.Context) (int32, error) {
-	m.lock.RLock()
-	defer m.lock.RUnlock()
-
-	rows := m.db.QueryRowContext(c, "SELECT COALESCE(MAX(port), ?) FROM service WHERE active = true",
-		viper.GetInt("SERVICE_PORT_RANGE_START"))
-
-	var tmpport int32
-
-	err := rows.Scan(&tmpport)
-	if err != nil {
-		log.Error("Failed to get free port number from database", "err", err)
-		return -1, err
-	}
-	return int32(tmpport + 1), nil
-}
-
-func (m PgSQLRepository) storeService(c context.Context, s service) error {
-	_, err := m.db.ExecContext(
-		c,
-		"INSERT INTO service (ext_id, name, version, port, active) VALUES (?, ?, ?, ?, ?)",
-		s.ext_id, s.name, s.version, s.port, s.active)
-	return err
-}
-
 func (s *server) Announce(ctx context.Context, in *pb.AnnounceRequest) (*pb.AnnounceResponse, error) {
-	tmpport, err := app.store.getFreePortNumber(ctx)
+	tmpport, err := app.store.GetFreePortNumber(ctx)
 	if err != nil {
 		log.Error("No free port number to hand out.", "err", err)
 		return nil, err
 	}
 
-	sc := service{
-		ext_id:  uuid.New(),
-		name:    in.Name,
-		version: in.Version,
-		port:    tmpport,
-		active:  true,
+	sc := pg.Service{
+		Ext_id:  uuid.New(),
+		Name:    in.Name,
+		Version: in.Version,
+		Port:    tmpport,
+		Active:  true,
 	}
 
-	if err := app.store.storeService(ctx, sc); err != nil {
+	if err := app.store.StoreService(ctx, sc); err != nil {
 		log.Error("Failed to save service to db", "err", err)
 	}
 
@@ -203,8 +145,8 @@ func (s *server) Announce(ctx context.Context, in *pb.AnnounceRequest) (*pb.Anno
 	)
 
 	return &pb.AnnounceResponse{
-		Id:          sc.ext_id.String(),
-		Serviceport: sc.port,
+		Id:          sc.Ext_id.String(),
+		Serviceport: sc.Port,
 	}, nil
 }
 

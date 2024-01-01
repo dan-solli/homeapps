@@ -10,5 +10,6 @@ use ./proto/servicemesh
 use ./common/clients/eventbroker
 
 use ./microservice/checklist
-use ./microservice/servicemesh
 use ./microservice/eventbroker
+
+use ./microservice/servicemesh
