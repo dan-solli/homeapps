@@ -8,7 +8,6 @@ import (
 
 	"log/slog"
 
-	"github.com/google/uuid"
 	_ "github.com/lib/pq"
 	"github.com/spf13/viper"
 
@@ -16,7 +15,7 @@ import (
 	"google.golang.org/grpc/credentials"
 
 	eb "github.com/dan-solli/homeapps/common/clients/eventbroker"
-	pg "github.com/dan-solli/homeapps/microservice/servicemesh/database/pgsql"
+	"github.com/dan-solli/homeapps/microservice/servicemesh/service"
 	pb "github.com/dan-solli/homeapps/proto/servicemesh"
 )
 
@@ -28,15 +27,10 @@ var (
 	log *slog.Logger
 )
 
-type iStore interface {
-	GetFreePortNumber(c context.Context) (int32, error)
-	StoreService(c context.Context, s pg.Service) error
-}
-
 type ServiceMesh struct {
 	cfg   ServiceMeshConfig
 	gc    *eb.EventBrokerClient
-	store iStore
+	store service.IStore
 }
 
 type server struct {
@@ -52,10 +46,7 @@ func main() {
 
 	var err error
 
-	app.cfg, err = NewServiceMeshConfig()
-	if err != nil {
-		log.Error("Failed to set up config", "err", err)
-	}
+	app.cfg = NewServiceMeshConfig()
 
 	if err := NewGRpcServer(app.cfg); err != nil {
 		log.Error("Failed to initialize grpc-server", "err", err)
@@ -67,7 +58,9 @@ func main() {
 	}
 	app.gc = ebc
 
-	if store, err := pg.NewPgSQLRepository(log); err != nil {
+	dbConfig := *service.NewDBConfig()
+
+	if store, err := service.NewPgSQLRepository(dbConfig); err != nil {
 		log.Error("Failed to initialize repository", "err", err)
 	} else {
 		app.store = store
@@ -114,19 +107,13 @@ func NewServerListener(port int) (net.Listener, error) {
 }
 
 func (s *server) Announce(ctx context.Context, in *pb.AnnounceRequest) (*pb.AnnounceResponse, error) {
-	tmpport, err := app.store.GetFreePortNumber(ctx)
+	tmpport, err := GetFreePort()
 	if err != nil {
 		log.Error("No free port number to hand out.", "err", err)
 		return nil, err
 	}
 
-	sc := pg.Service{
-		Ext_id:  uuid.New(),
-		Name:    in.Name,
-		Version: in.Version,
-		Port:    tmpport,
-		Active:  true,
-	}
+	sc := service.NewService(in.Name, in.Version, tmpport)
 
 	if err := app.store.StoreService(ctx, sc); err != nil {
 		log.Error("Failed to save service to db", "err", err)
@@ -145,23 +132,23 @@ func (s *server) Announce(ctx context.Context, in *pb.AnnounceRequest) (*pb.Anno
 	)
 
 	return &pb.AnnounceResponse{
-		Id:          sc.Ext_id.String(),
-		Serviceport: sc.Port,
+		Id:          sc.GetExternalID(),
+		Serviceport: int32(tmpport),
 	}, nil
-}
-
-func (s *server) Register(ctx context.Context, in *pb.RegisterRequest) (*pb.RegisterResponse, error) {
-	return &pb.RegisterResponse{
-		Id:        "1",
-		ServiceId: "1",
-		Port:      6001,
-	}, nil
-}
-
-func (s *server) Deregister(ctx context.Context, in *pb.DeregisterRequest) (*pb.DeregisterResponse, error) {
-	return &pb.DeregisterResponse{Status: true}, nil
 }
 
 func (s *server) Denounce(ctx context.Context, in *pb.DenounceRequest) (*pb.DenounceResponse, error) {
 	return &pb.DenounceResponse{Status: true}, nil
+}
+
+func GetFreePort() (port int, err error) {
+	var a *net.TCPAddr
+	if a, err = net.ResolveTCPAddr("tcp", "localhost:0"); err == nil {
+		var l *net.TCPListener
+		if l, err = net.ListenTCP("tcp", a); err == nil {
+			defer l.Close()
+			return l.Addr().(*net.TCPAddr).Port, nil
+		}
+	}
+	return
 }

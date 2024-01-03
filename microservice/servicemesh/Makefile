@@ -15,6 +15,12 @@ build:
 test:
 	${GOTEST} ./... ${TEST_FLAGS} 
 
+test-integration:
+	${GOTEST} -tags=integration ./... ${TEST_FLAGS}
+
+test-load:
+	${GOTEST} -tags=load ./... ${TEST_FLAGS}
+
 clean:
 	rm -f $(BINARY_NAME) coverage.out
 

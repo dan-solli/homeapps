@@ -12,8 +12,7 @@ type ServiceMeshConfig struct {
 	httpport int
 }
 
-// TODO: Need to fake the config. But that might be easy by not calling this func. Except if it contains more stuff.
-func NewServiceMeshConfig() (ServiceMeshConfig, error) {
+func NewServiceMeshConfig() ServiceMeshConfig {
 	viper.SetEnvPrefix("MS_SM")
 	viper.AutomaticEnv()
 
@@ -23,5 +22,30 @@ func NewServiceMeshConfig() (ServiceMeshConfig, error) {
 		keyFile:  viper.GetString("KEYFILE"),
 		grpcport: viper.GetInt("GRPC_PORT"),
 		httpport: viper.GetInt("HTTP_PORT"),
-	}, nil
+	}
+}
+
+func (c *ServiceMeshConfig) WithTLS(tls bool) ServiceMeshConfig {
+	c.tls = tls
+	return *c
+}
+
+func (c *ServiceMeshConfig) WithCertFile(certFile string) ServiceMeshConfig {
+	c.certFile = certFile
+	return *c
+}
+
+func (c *ServiceMeshConfig) WithKeyFile(keyFile string) ServiceMeshConfig {
+	c.keyFile = keyFile
+	return *c
+}
+
+func (c *ServiceMeshConfig) WithGrpcPort(grpcport int) ServiceMeshConfig {
+	c.grpcport = grpcport
+	return *c
+}
+
+func (c *ServiceMeshConfig) WithHttpPort(httpport int) ServiceMeshConfig {
+	c.httpport = httpport
+	return *c
 }
