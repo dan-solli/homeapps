@@ -8,3 +8,4 @@ bazel-bin
 bazel-homeapps
 bazel-out
 bazel-testlogs
+coverage.out
