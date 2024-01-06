@@ -9,3 +9,4 @@ bazel-homeapps
 bazel-out
 bazel-testlogs
 coverage.out
+PLAN.md

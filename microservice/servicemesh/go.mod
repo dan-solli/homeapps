@@ -18,6 +18,7 @@ require (
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/uuid v1.5.0
 	github.com/hashicorp/hcl v1.0.0 // indirect
+	github.com/iamolegga/enviper v1.4.2
 	github.com/lib/pq v1.10.9
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect

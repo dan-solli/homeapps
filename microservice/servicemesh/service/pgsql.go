@@ -7,7 +7,7 @@ import (
 	"log/slog"
 	"sync"
 
-	"github.com/spf13/viper"
+	"github.com/dan-solli/homeapps/microservice/servicemesh/config"
 )
 
 type PgSQLRepository struct {
@@ -16,13 +16,17 @@ type PgSQLRepository struct {
 	l    *slog.Logger
 }
 
-func NewPgSQLRepository(d DBConfig) (*PgSQLRepository, error) {
+func NewPgSQLRepository(d config.DB, log *slog.Logger) (*PgSQLRepository, error) {
+
+	if err := config.Viper().Unmarshal(&d); err != nil {
+		log.Info("Failed to unmarshal config file", "err", err)
+		panic(err)
+	}
+	log.Info("Hydrated config", "cfg", d)
+
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		viper.GetString("DB_HOST"),
-		viper.GetInt("DB_PORT"),
-		viper.GetString("DB_USER"),
-		viper.GetString("DB_PASS"),
-		viper.GetString("DB_NAME"))
+		d.Db_host, d.Db_port, d.Db_user, d.Db_pass, d.Db_name)
+
 	db, err := sql.Open("postgres", psqlInfo)
 	if err != nil {
 		return nil, err
