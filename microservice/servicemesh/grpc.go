@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"sync"
 
 	eb "github.com/dan-solli/homeapps/common/clients/eventbroker"
 	"github.com/dan-solli/homeapps/microservice/servicemesh/config"
@@ -84,7 +85,7 @@ func (s *server) Announce(ctx context.Context, in *pb.AnnounceRequest) (*pb.Anno
 	)
 
 	return &pb.AnnounceResponse{
-		Id:          sc.GetExternalID(),
+		Id:          sc.ExtId.String(),
 		Serviceport: int32(tmpport),
 	}, nil
 }
@@ -103,4 +104,47 @@ func GetFreePort() (port int, err error) {
 		}
 	}
 	return
+}
+
+///
+///
+///
+
+func StartGRpcServer(wg *sync.WaitGroup, s *grpc.Server, c config.GRpc) *grpc.Server {
+	log.Info("Given port", "port", c.Grpc_port)
+	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", c.Grpc_port))
+	if err != nil {
+		log.Error("failed to listen", "err", err)
+	}
+	defer lis.Close()
+	pb.RegisterServiceMeshServiceServer(s, &server{})
+	log.Info("server listening", "port", lis.Addr())
+
+	if err := s.Serve(lis); err != grpc.ErrServerStopped {
+		log.Error("failed to serve", "err", err)
+	}
+	return s
+}
+
+func CreateGRpcServer(c config.GRpc) (*grpc.Server, error) {
+	var opts []grpc.ServerOption
+
+	if err := config.Viper().Unmarshal(&c); err != nil {
+		log.Info("Failed to unmarshal config file", "err", err)
+		panic(err)
+	}
+	log.Info("Hydrated config", "cfg", c)
+
+	if c.Tls {
+		creds, err := credentials.NewServerTLSFromFile(c.Certfile, c.Keyfile)
+		if err != nil {
+			log.Error("Failed to generate credentials", "err", err)
+			return nil, err
+		}
+		opts = []grpc.ServerOption{grpc.Creds(creds)}
+	}
+
+	s := grpc.NewServer(opts...)
+
+	return s, nil
 }

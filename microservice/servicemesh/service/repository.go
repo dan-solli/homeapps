@@ -9,6 +9,7 @@ import (
 
 type IStore interface {
 	StoreService(c context.Context, s Service) error
+	GetServices(c context.Context) ([]Service, error)
 }
 
 func NewBackend(cfg config.DB, f IStore, l *slog.Logger) (IStore, error) {

@@ -50,6 +50,28 @@ func (m *PgSQLRepository) StoreService(c context.Context, s Service) error {
 	_, err := m.db.ExecContext(
 		c,
 		"INSERT INTO service (ext_id, name, version, port, active) VALUES (?, ?, ?, ?, ?)",
-		s.ext_id, s.name, s.version, s.port, s.active)
+		s.ExtId, s.Name, s.Version, s.Port, s.Active)
 	return err
+}
+
+func (m *PgSQLRepository) GetServices(c context.Context) ([]Service, error) {
+	m.lock.RLock()
+	defer m.lock.RUnlock()
+
+	rows, err := m.db.QueryContext(c, "SELECT * FROM service")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var services []Service
+	for rows.Next() {
+		var s Service
+		err := rows.Scan(&s.ExtId, &s.Name, &s.Version, &s.Port, &s.Active)
+		if err != nil {
+			return nil, err
+		}
+		services = append(services, s)
+	}
+	return services, nil
 }

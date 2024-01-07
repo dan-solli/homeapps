@@ -8,27 +8,11 @@ import (
 	"github.com/spf13/viper"
 )
 
-/*
-type Config struct {
-	Rest_port           int    `mapstructure:"rest_port"`
-	Metrics_path        string `mapstructure:"metrics_path"`
-	Health_path         string `mapstructure:"health_path"`
-	Grpc_port           int    `mapstructure:"grpc_port"`
-	Tls                 bool   `mapstructure:"tls"`
-	Keyfile             string `mapstructure:"keyfile"`
-	Certfile            string `mapstructure:"certfile"`
-	Eventbroker_address string `mapstructure:"eventbroker_address"`
-	Db_host             string `mapstructure:"DB_HOST"`
-	Db_port             int    `mapstructure:"db_port"`
-	Db_user             string `mapstructure:"db_user"`
-	Db_pass             string `mapstructure:"db_pass"`
-}
-*/
-
 type Http struct {
 	Rest_port    int    `mapstructure:"REST_PORT"`
 	Metrics_path string `mapstructure:"metrics_path"`
 	Health_path  string `mapstructure:"HEALTH_PATH"`
+	Sd_path      string `mapstructure:"SD_PATH"`
 }
 
 type GRpc struct {
