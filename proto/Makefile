@@ -3,7 +3,7 @@ GOCMD=go
 GOBUILD=$(GOCMD) build
 GOTEST=$(GOCMD) test
 GOGET=$(GOCMD) get
-TARGETS=eventbroker servicemesh
+TARGETS=eventbroker servicemesh queue
 PKGPATH=github.com/dan-solli/homeapps/proto
 
 # Targets
@@ -18,6 +18,11 @@ eventbroker: eventbroker.proto
 	@(cd $@ && go mod init $(PKGPATH)/$@ && go mod tidy)
 
 servicemesh: servicemesh.proto
+	@mkdir -p ./$@
+	protoc --go_out=./$@ --go_opt=paths=source_relative --go-grpc_out=./$@ --go-grpc_opt=paths=source_relative $@.proto
+	@(cd $@ && go mod init $(PKGPATH)/$@ && go mod tidy)
+
+queue: queue.proto
 	@mkdir -p ./$@
 	protoc --go_out=./$@ --go_opt=paths=source_relative --go-grpc_out=./$@ --go-grpc_opt=paths=source_relative $@.proto
 	@(cd $@ && go mod init $(PKGPATH)/$@ && go mod tidy)

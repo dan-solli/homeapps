@@ -6,6 +6,7 @@ use ./common/common
 
 use ./proto/eventbroker
 use ./proto/servicemesh
+use ./proto/queue
 
 use ./common/clients/eventbroker
 

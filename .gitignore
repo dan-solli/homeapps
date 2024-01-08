@@ -10,3 +10,4 @@ bazel-out
 bazel-testlogs
 coverage.out
 PLAN.md
+microservice/eventbroker/.env
